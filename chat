@@ -1,0 +1,31 @@
+from github import Github
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+import time
+
+g = Github("YOUR_GITHUB_ACCESS_TOKEN")
+
+
+repo = g.get_user("GITHUB_USERNAME").get_repo("REPO_NAME")
+
+
+phone_number = "PHONE_NUMBER"
+
+
+driver = webdriver.Chrome()
+driver.get("https://web.whatsapp.com")
+time.sleep(15) # Aguarde para escanear o código QR
+
+def send_whatsapp_message(message):
+    driver.get(f"https://web.whatsapp.com/send?phone={phone_number}")
+    time.sleep(3)
+    text_box = driver.find_element_by_xpath('//*[@id="main"]/footer/div[1]/div[2]/div/div[2]')
+    text_box.send_keys(message)
+    text_box.send_keys(Keys.ENTER)
+
+for event in repo.get_events():
+    if event.type == "IssuesEvent" and event.payload["action"] == "opened":
+        issue_title = event.payload["issue"]["title"]
+        issue_url = event.payload["issue"]["html_url"]
+        message = f"Novo problema aberto no GitHub: {issue_title}\n{issue_url}"
+        send_whatsapp_message(message)
